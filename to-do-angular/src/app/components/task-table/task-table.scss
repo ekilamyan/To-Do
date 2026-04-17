@@ -1,0 +1,152 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.table-container {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.table-scroll {
+  overflow-y: auto;
+  overflow-x: auto;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 0;
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 44px 34px 1fr 1fr 120px 140px 150px 72px;
+  align-items: center;
+  height: 36px;
+  padding: 0 8px;
+  background: var(--bg-table-header);
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.header-cell {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+  padding: 0 8px;
+  user-select: none;
+  white-space: nowrap;
+  font-family: 'DM Sans', sans-serif;
+
+  &.sortable {
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: color 150ms ease;
+    border-radius: var(--radius-sm);
+    padding: 4px 8px;
+    margin: 0 -8px;
+
+    &:hover { color: var(--text-primary); }
+  }
+
+  .sort-icon {
+    font-size: 9px;
+    opacity: 0.3;
+    transition: opacity 150ms ease, transform 150ms ease;
+  }
+
+  &.sorted-asc .sort-icon,
+  &.sorted-desc .sort-icon {
+    opacity: 1;
+    color: var(--accent);
+  }
+
+  &.sorted-desc .sort-icon { transform: rotate(180deg); }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+  color: var(--text-muted);
+  gap: 10px;
+
+  .empty-icon {
+    font-size: 32px;
+    opacity: 0.25;
+    margin-bottom: 4px;
+  }
+
+  span {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+}
+
+// ─── Drag and Drop ────────────────────────────────────────────────────────────
+.drag-wrapper {
+  cursor: default;
+  margin: 0 8px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  background: var(--bg-primary);
+
+  &.has-expanded-subtasks {
+    border-radius: var(--radius) var(--radius) 0 0;
+    margin-bottom: 0;
+  }
+}
+
+.subtask-drop-zone {
+  min-height: 0;
+  margin: 0 8px;
+  border: 1px solid var(--border-color);
+  border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  overflow: hidden;
+  background: var(--bg-primary);
+}
+
+.cdk-drag-preview {
+  background: var(--bg-primary);
+  border: 1.5px solid var(--accent);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  opacity: 0.95;
+}
+
+.cdk-drag-placeholder {
+  opacity: 0.25;
+  border: 1.5px dashed var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--accent-light);
+}
+
+.cdk-drag-animating {
+  transition: transform 200ms ease;
+}
+
+.cdk-drop-list-dragging .drag-wrapper:not(.cdk-drag-placeholder) {
+  transition: transform 200ms ease;
+}

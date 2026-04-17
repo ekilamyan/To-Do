@@ -1,0 +1,8 @@
+@if (taskService.loading()) {
+  <div class="loading-state">
+    <span class="material-symbols-rounded loading-icon">hourglass_empty</span>
+    Loading tasks…
+  </div>
+} @else {
+  <app-task-table [tasks]="taskService.completedTasksView()" tabType="completed" />
+}

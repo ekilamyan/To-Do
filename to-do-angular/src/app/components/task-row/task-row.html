@@ -1,0 +1,174 @@
+<div class="task-row" [class.subtask]="isSubtask()" [class.edit-mode]="isEditMode()" [class.completed-subtask]="isSubtask() && task().status === 'completed' && tabType() === 'active'" [class.placeholder]="isPlaceholder()">
+  <!-- Drag handle (active tab only) -->
+  @if (tabType() === 'active') {
+    <div class="drag-handle" cdkDragHandle>
+      <span class="material-symbols-rounded">drag_indicator</span>
+    </div>
+  }
+
+  <!-- Complete button column -->
+  <div class="cell-complete">
+    @if (isPlaceholder()) {
+      <!-- No action for placeholder parents -->
+    } @else if (tabType() === 'active' && task().status !== 'completed') {
+      <button class="complete-btn" (click)="onCompleteClick()" title="Complete task">
+        <span class="material-symbols-rounded check-icon">check</span>
+      </button>
+    } @else if (tabType() === 'active' && task().status === 'completed') {
+      <button class="complete-btn completed" disabled>
+        <span class="material-symbols-rounded check-icon">check</span>
+      </button>
+    } @else if (tabType() === 'completed') {
+      <button class="complete-btn completed" disabled>
+        <span class="material-symbols-rounded check-icon">check</span>
+      </button>
+    } @else if (tabType() === 'deleted') {
+      <button class="action-btn permanent-delete-btn always-visible" (click)="permanentDelete.emit()" title="Permanently delete">
+        <span class="material-symbols-rounded btn-icon">close</span>
+      </button>
+    }
+  </div>
+
+  <!-- Expand chevron column -->
+  <div class="cell-expand">
+    @if (!isSubtask() && (task().subtaskIds.length > 0 || deletedSubtaskCount() > 0)) {
+      <button class="expand-btn" [class.expanded]="task().isExpanded" (click)="toggleExpand.emit()">
+        <span class="material-symbols-rounded chevron">chevron_right</span>
+      </button>
+    } @else {
+      <div class="expand-placeholder"></div>
+    }
+  </div>
+
+  <!-- Title -->
+  <div class="cell cell-title">
+    @if (isEditMode() || editingField() === 'title') {
+      <input class="edit-field"
+             [value]="editingField() === 'title' ? editValue() : task().title"
+             (focus)="startEdit('title')"
+             (input)="editValue.set($any($event.target).value)"
+             (blur)="commitEdit('title')"
+             (keydown)="onKeydown($event, 'title')"
+             placeholder="Task title..." />
+    } @else {
+      <span (click)="startEdit('title')">
+        {{ task().title }}
+        @if (isPlaceholder()) {
+          <span class="status-badge" [class.active-badge]="task().status === 'active'" [class.completed-badge]="task().status === 'completed'">{{ task().status === 'active' ? 'Active' : 'Completed' }}</span>
+          @if (deletedSubtaskCount() > 0) {
+            <span class="subtask-count">{{ deletedSubtaskCount() }}</span>
+          }
+        } @else if (!isSubtask() && task().subtaskIds.length > 0) {
+          <span class="subtask-count">{{ task().subtaskIds.length }}</span>
+        }
+      </span>
+    }
+  </div>
+
+  <!-- Description -->
+  <div class="cell cell-description">
+    @if (isEditMode() || editingField() === 'description') {
+      <input class="edit-field"
+             [value]="editingField() === 'description' ? editValue() : task().description"
+             (focus)="startEdit('description')"
+             (input)="editValue.set($any($event.target).value)"
+             (blur)="commitEdit('description')"
+             (keydown)="onKeydown($event, 'description')"
+             placeholder="Add description..." />
+    } @else {
+      <span (click)="startEdit('description')">{{ task().description || '' }}</span>
+    }
+  </div>
+
+  <!-- Priority -->
+  <div class="cell cell-priority" [class.locked-cell]="!subscriptionService.isPro()">
+    @if (isEditMode() || editingField() === 'priority') {
+      <select class="edit-field edit-select"
+              [value]="editingField() === 'priority' ? editValue() : task().priority"
+              (focus)="startEdit('priority')"
+              (change)="editValue.set($any($event.target).value); commitEdit('priority')">
+        @for (p of priorities; track p) {
+          <option [value]="p" [selected]="p === task().priority">{{ p }}</option>
+        }
+      </select>
+    } @else {
+      <span class="priority-pill" [class]="'priority-pill priority-' + task().priority" (click)="onPriorityClick()">{{ task().priority }}</span>
+    }
+  </div>
+
+  <!-- Due Date -->
+  <div class="cell cell-due-date">
+    @if (isEditMode() || editingField() === 'dueDate') {
+      <input class="edit-field"
+             type="date"
+             [value]="editingField() === 'dueDate' ? editValue() : (task().dueDate ? formatDateForInput(task().dueDate!) : '')"
+             (focus)="startEdit('dueDate')"
+             (input)="editValue.set($any($event.target).value)"
+             (blur)="commitEdit('dueDate')" />
+    } @else {
+      @if (task().dueDate) {
+        <span class="due-date" [class.overdue]="isOverdue()" (click)="startEdit('dueDate')">{{ formatDate(task().dueDate!) }}</span>
+      } @else {
+        <span class="empty-field" (click)="startEdit('dueDate')"></span>
+      }
+    }
+  </div>
+
+  <!-- Assignee -->
+  <div class="cell cell-assignee">
+    @if (isEditMode() || editingField() === 'assignee') {
+      <input class="edit-field"
+             [attr.list]="'assignee-list-' + task().id"
+             [value]="editingField() === 'assignee' ? editValue() : task().assignee"
+             (focus)="startEdit('assignee')"
+             (input)="editValue.set($any($event.target).value)"
+             (blur)="commitEdit('assignee')"
+             (keydown)="onKeydown($event, 'assignee')"
+             placeholder="Assignee..." />
+      <datalist [id]="'assignee-list-' + task().id">
+        @for (name of taskService.assigneePool(); track name) {
+          <option [value]="name"></option>
+        }
+      </datalist>
+    } @else {
+      <span (click)="startEdit('assignee')">{{ task().assignee }}</span>
+    }
+  </div>
+
+  <!-- Action button column -->
+  <div class="cell-action">
+    @if (isPlaceholder()) {
+      <!-- No actions for placeholder parents -->
+    } @else {
+    <!-- Edit toggle button (active tab only) -->
+    @if (tabType() === 'active') {
+      <button class="action-btn edit-btn" [class.always-visible]="isEditMode()" [class.active]="isEditMode()" (click)="toggleEditMode()" [title]="isEditMode() ? 'Done editing' : 'Edit task'">
+        @if (isEditMode()) {
+          <span class="material-symbols-rounded btn-icon">check</span>
+        } @else {
+          <span class="material-symbols-rounded btn-icon">edit</span>
+        }
+      </button>
+    }
+
+    @if (tabType() === 'active') {
+      @if (!isSubtask()) {
+        <button class="action-btn add-subtask-btn" (click)="addSubtask.emit()" title="Add subtask">
+          <span class="material-symbols-rounded btn-icon">add</span>
+        </button>
+      }
+      <button class="action-btn" (click)="delete.emit()" title="Delete task">
+        <span class="material-symbols-rounded btn-icon">delete</span>
+      </button>
+    } @else if (tabType() === 'completed' && !parentDeleted()) {
+      <button class="action-btn restore-btn always-visible" (click)="restore.emit()" title="Restore task">
+        <span class="material-symbols-rounded btn-icon">restore</span>
+      </button>
+    } @else if (tabType() === 'deleted' && !parentDeleted()) {
+      <button class="action-btn restore-btn always-visible" (click)="restore.emit()" title="Restore task">
+        <span class="material-symbols-rounded btn-icon">restore</span>
+      </button>
+    }
+    }
+  </div>
+</div>

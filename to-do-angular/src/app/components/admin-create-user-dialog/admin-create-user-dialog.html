@@ -1,0 +1,50 @@
+<div class="dialog-backdrop" (click)="closed.emit()"></div>
+<div class="dialog-card">
+  <div class="dialog-header">
+    <h3 class="dialog-title">Create User</h3>
+    <button class="close-btn" (click)="closed.emit()">
+      <span class="material-symbols-rounded">close</span>
+    </button>
+  </div>
+
+  @if (error()) {
+    <p class="error-msg">{{ error() }}</p>
+  }
+
+  <form (ngSubmit)="onSubmit()">
+    <div class="field">
+      <label class="field-label">Email</label>
+      <input
+        class="field-input"
+        type="email"
+        placeholder="user@example.com"
+        [ngModel]="email()"
+        (ngModelChange)="email.set($event)"
+        name="email"
+        required
+        autocomplete="off"
+      />
+    </div>
+
+    <div class="field">
+      <label class="field-label">Password</label>
+      <input
+        class="field-input"
+        type="password"
+        placeholder="Minimum 6 characters"
+        [ngModel]="password()"
+        (ngModelChange)="password.set($event)"
+        name="password"
+        required
+        autocomplete="new-password"
+      />
+    </div>
+
+    <div class="dialog-actions">
+      <button type="button" class="btn-cancel" (click)="closed.emit()">Cancel</button>
+      <button type="submit" class="btn-confirm" [disabled]="loading()">
+        {{ loading() ? 'Creating…' : 'Create User' }}
+      </button>
+    </div>
+  </form>
+</div>

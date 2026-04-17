@@ -1,0 +1,19 @@
+:host {
+  display: inline-block;
+  pointer-events: none;
+}
+
+.pro-chip {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  font-family: 'DM Sans', sans-serif;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--accent);
+  padding: 2px 5px;
+  border-radius: 4px;
+  line-height: 1.2;
+  white-space: nowrap;
+}

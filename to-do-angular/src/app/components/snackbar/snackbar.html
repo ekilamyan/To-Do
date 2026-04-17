@@ -1,0 +1,6 @@
+@if (snackbarService.message(); as msg) {
+  <div class="snackbar">
+    <span class="snackbar-message">{{ msg }}</span>
+    <button class="snackbar-dismiss" (click)="snackbarService.dismiss()">✕</button>
+  </div>
+}

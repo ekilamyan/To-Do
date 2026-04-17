@@ -1,0 +1,99 @@
+@if (sortedTasks().length === 0 && tabType() !== 'active') {
+  <div class="table-container">
+    <div class="empty-state">
+      @if (tabType() === 'completed') {
+        <div class="empty-icon">&#10003;</div>
+        <span>No completed tasks yet</span>
+      } @else if (tabType() === 'deleted') {
+        <div class="empty-icon">&#128465;</div>
+        <span>Trash is empty</span>
+      }
+    </div>
+  </div>
+} @else {
+  <div class="table-container">
+    <!-- Header -->
+    <div class="table-header">
+      <div class="header-cell"></div>
+      <div class="header-cell"></div>
+      <div class="header-cell sortable" [class.sorted-asc]="getSortClass('title') === 'sorted-asc'" [class.sorted-desc]="getSortClass('title') === 'sorted-desc'" (click)="toggleSort('title')">
+        Title
+        <span class="sort-icon">&#9650;</span>
+      </div>
+      <div class="header-cell sortable" [class.sorted-asc]="getSortClass('description') === 'sorted-asc'" [class.sorted-desc]="getSortClass('description') === 'sorted-desc'" (click)="toggleSort('description')">
+        Description
+        <span class="sort-icon">&#9650;</span>
+      </div>
+      <div class="header-cell sortable" [class.sorted-asc]="getSortClass('priority') === 'sorted-asc'" [class.sorted-desc]="getSortClass('priority') === 'sorted-desc'" (click)="toggleSort('priority')">
+        Priority
+        <span class="sort-icon">&#9650;</span>
+        @if (!subscriptionService.isPro()) {
+          <app-pro-chip />
+        }
+      </div>
+      <div class="header-cell sortable" [class.sorted-asc]="getSortClass('dueDate') === 'sorted-asc'" [class.sorted-desc]="getSortClass('dueDate') === 'sorted-desc'" (click)="toggleSort('dueDate')">
+        Due Date
+        <span class="sort-icon">&#9650;</span>
+      </div>
+      <div class="header-cell sortable" [class.sorted-asc]="getSortClass('assignee') === 'sorted-asc'" [class.sorted-desc]="getSortClass('assignee') === 'sorted-desc'" (click)="toggleSort('assignee')">
+        Assignee
+        <span class="sort-icon">&#9650;</span>
+      </div>
+      <div class="header-cell"></div>
+    </div>
+
+    <!-- Scrollable body -->
+    <div class="table-scroll" cdkDropList [cdkDropListDisabled]="isDragDisabled()" (cdkDropListDropped)="onDrop($event)">
+      @if (sortedTasks().length === 0 && tabType() === 'active' && taskService.creatingTaskParentId() === undefined) {
+        <div class="empty-state">
+          <div class="empty-icon">&#128203;</div>
+          <span>No tasks yet. Click + Task to get started!</span>
+        </div>
+      }
+
+      @for (task of sortedTasks(); track task.id) {
+        <div cdkDrag [cdkDragDisabled]="isDragDisabled()" class="drag-wrapper" [class.has-expanded-subtasks]="task.isExpanded && (getSubtasks(task.id).length > 0 || taskService.creatingTaskParentId() === task.id)">
+          <app-task-row
+            [task]="task"
+            [tabType]="tabType()"
+            [isPlaceholder]="isPlaceholder(task.id)"
+            [deletedSubtaskCount]="isPlaceholder(task.id) ? getSubtasks(task.id).length : 0"
+            (complete)="onCompleteTask(task)"
+            (delete)="onDeleteTask(task)"
+            (restore)="onRestoreTask(task)"
+            (permanentDelete)="onPermanentDeleteTask(task)"
+            (toggleExpand)="onToggleExpand(task)"
+            (addSubtask)="onAddSubtask(task)" />
+        </div>
+
+        <!-- Subtasks when expanded -->
+        @if (task.isExpanded) {
+          <div cdkDropList [cdkDropListDisabled]="isDragDisabled()" (cdkDropListDropped)="onSubtaskDrop(task.id, $event)" class="subtask-drop-zone">
+            @for (subtask of getSubtasks(task.id); track subtask.id) {
+              <div cdkDrag [cdkDragDisabled]="isDragDisabled()">
+                <app-task-row
+                  [task]="subtask"
+                  [tabType]="tabType()"
+                  [isSubtask]="true"
+                  [parentDeleted]="task.status === tabType()"
+                  (complete)="onCompleteTask(subtask)"
+                  (delete)="onDeleteTask(subtask)"
+                  (restore)="onRestoreTask(subtask)"
+                  (permanentDelete)="onPermanentDeleteTask(subtask)" />
+              </div>
+            }
+          </div>
+
+          @if (taskService.creatingTaskParentId() === task.id) {
+            <app-inline-creation-row [parentId]="task.id" (saved)="onCreationDone()" (cancelled)="onCreationDone()" />
+          }
+        }
+      }
+
+      <!-- Inline creation row at bottom -->
+      @if (taskService.creatingTaskParentId() === null) {
+        <app-inline-creation-row [parentId]="null" (saved)="onCreationDone()" (cancelled)="onCreationDone()" />
+      }
+    </div>
+  </div>
+}

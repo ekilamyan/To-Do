@@ -1,0 +1,68 @@
+<div class="creation-row" [class.active]="isActive()">
+  <!-- Title — spans drag + expand + title columns so it starts at the left edge -->
+  <div class="creation-cell creation-cell-title">
+    <input #titleInput class="creation-input"
+           [placeholder]="parentId() ? 'Add subtask...' : 'Add a task...'"
+           [value]="title()"
+           (input)="title.set($any($event.target).value)"
+           (focus)="onFocus()"
+           (blur)="onBlur()"
+           (keydown)="onKeydown($event)" />
+  </div>
+
+  <!-- Description -->
+  <div class="creation-cell">
+    <input class="creation-input"
+           placeholder="Description..."
+           [value]="description()"
+           (input)="description.set($any($event.target).value)"
+           (focus)="onFocus()"
+           (keydown)="onKeydown($event)" />
+  </div>
+
+  <!-- Priority -->
+  <div class="creation-cell" [class.locked]="!subscriptionService.isPro()">
+    <select class="creation-select"
+            [value]="priority()"
+            [disabled]="!subscriptionService.isPro()"
+            (change)="priority.set($any($event.target).value)"
+            (focus)="onFocus()">
+      @for (p of priorities; track p) {
+        <option [value]="p" [selected]="p === priority()">{{ p }}</option>
+      }
+    </select>
+  </div>
+
+  <!-- Due Date -->
+  <div class="creation-cell">
+    <input class="creation-input"
+           type="date"
+           [value]="dueDate()"
+           (input)="dueDate.set($any($event.target).value)"
+           (focus)="onFocus()" />
+  </div>
+
+  <!-- Assignee -->
+  <div class="creation-cell">
+    <input class="creation-input"
+           placeholder="Assignee..."
+           [attr.list]="'creation-assignee-list-' + (parentId() ?? 'root')"
+           [value]="assignee()"
+           (input)="assignee.set($any($event.target).value)"
+           (focus)="onFocus()"
+           (keydown)="onKeydown($event)" />
+    <datalist [id]="'creation-assignee-list-' + (parentId() ?? 'root')">
+      @for (name of taskService.assigneePool(); track name) {
+        <option [value]="name"></option>
+      }
+    </datalist>
+  </div>
+
+  <!-- Save / Cancel buttons -->
+  <div class="creation-cell creation-action">
+    <button class="save-btn" (mousedown)="$event.preventDefault()" (click)="save()">Save</button>
+    <button class="cancel-btn" (mousedown)="$event.preventDefault()" (click)="cancelled.emit()" title="Cancel">
+      <span class="material-symbols-rounded">delete</span>
+    </button>
+  </div>
+</div>

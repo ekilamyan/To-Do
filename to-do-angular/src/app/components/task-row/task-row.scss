@@ -1,0 +1,382 @@
+:host {
+  display: contents;
+}
+
+.task-row {
+  display: grid;
+  grid-template-columns: 44px 34px 1fr 1fr 120px 140px 150px 72px;
+  align-items: center;
+  min-height: 50px;
+  padding: 0 8px;
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 120ms ease;
+  position: relative;
+
+  &:hover {
+    background-color: var(--bg-hover);
+
+    .action-btn {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  &.subtask {
+    background: color-mix(in srgb, var(--bg-secondary) 60%, transparent);
+
+    .cell-title { padding-left: 32px; }
+  }
+
+  &.placeholder {
+    opacity: 0.6;
+    background: var(--bg-secondary);
+    cursor: default;
+  }
+
+  &.completed-subtask {
+    opacity: 0.55;
+
+    .cell-title span { text-decoration: line-through; }
+  }
+
+  &.edit-mode {
+    background-color: var(--bg-edit);
+
+    // Warm accent stripe on the left edge
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: var(--accent);
+      border-radius: 0 2px 2px 0;
+    }
+  }
+
+  &.completing { animation: fadeOut 250ms ease-out forwards; }
+  &.deleting   { animation: fadeOut 250ms ease-out forwards; }
+}
+
+// ─── Drag Handle ────────────────────────────────────────────────────────────
+.drag-handle {
+  position: absolute;
+  left: -4px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 28px;
+  color: var(--text-placeholder);
+  cursor: grab;
+  opacity: 0;
+  transition: opacity 150ms ease, color 150ms ease;
+  z-index: 5;
+  font-size: 16px;
+
+  &:hover { color: var(--text-secondary); }
+  &:active { cursor: grabbing; }
+}
+
+.task-row:hover .drag-handle { opacity: 1; }
+
+// ─── Complete Button ────────────────────────────────────────────────────────
+.complete-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-strong);
+  background: transparent;
+  cursor: pointer;
+  transition: all 200ms ease;
+  margin: 0 auto;
+  padding: 0;
+  flex-shrink: 0;
+
+  &:hover {
+    border-color: var(--complete-green);
+    background: rgba(22, 163, 74, 0.08);
+
+    .check-icon { opacity: 0.55; transform: scale(1); }
+  }
+
+  &.completed {
+    background: var(--complete-green);
+    border-color: var(--complete-green);
+    color: white;
+
+    .check-icon { opacity: 1; transform: scale(1); }
+  }
+
+  .check-icon {
+    font-size: 12px;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 200ms ease;
+  }
+}
+
+// ─── Expand Chevron ────────────────────────────────────────────────────────
+.expand-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  transition: all 180ms ease;
+  padding: 0;
+  margin: 0 auto;
+
+  &:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+  }
+
+  .chevron {
+    font-size: 18px;
+    transition: transform 200ms ease;
+  }
+
+  &.expanded .chevron { transform: rotate(90deg); }
+}
+
+.expand-placeholder {
+  width: 22px;
+  height: 22px;
+  margin: 0 auto;
+}
+
+// ─── Subtask Count Badge ───────────────────────────────────────────────────
+.subtask-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  padding: 1px 6px;
+  border-radius: var(--radius-xl);
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+// ─── Status Badge (placeholder parent indicator) ──────────────────────────
+.status-badge {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: var(--radius-xl);
+  margin-left: 8px;
+  vertical-align: middle;
+
+  &.active-badge {
+    color: var(--complete-green);
+    background: color-mix(in srgb, var(--complete-green) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--complete-green) 25%, transparent);
+  }
+
+  &.completed-badge {
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  }
+}
+
+// ─── Cells ─────────────────────────────────────────────────────────────────
+.cell {
+  padding: 4px 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  color: var(--text-primary);
+  font-size: 14px;
+  cursor: text;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid transparent;
+  transition: border-color 100ms ease;
+
+  .edit-mode &:hover { border-color: var(--border-color); }
+
+  &.editing {
+    border-color: var(--accent);
+    background: var(--bg-primary);
+    outline: none;
+    white-space: normal;
+  }
+}
+
+// ─── Edit Fields ───────────────────────────────────────────────────────────
+.edit-field {
+  width: 100%;
+  padding: 5px 8px;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: all 150ms ease;
+
+  &::placeholder { color: var(--text-placeholder); }
+
+  &:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+}
+
+.edit-select { cursor: pointer; }
+
+.empty-field {
+  display: block;
+  width: 100%;
+  min-height: 20px;
+  cursor: text;
+}
+
+// ─── Priority Pills ─────────────────────────────────────────────────────────
+.priority-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: var(--radius);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: filter 150ms ease;
+
+  // Dot indicator
+  &::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  &:hover { filter: brightness(0.94); }
+
+  &.priority-none {
+    color: var(--priority-none);
+    background: var(--priority-none-bg);
+    &::before { background: var(--priority-none); }
+  }
+  &.priority-low {
+    color: var(--priority-low);
+    background: var(--priority-low-bg);
+    &::before { background: var(--priority-low); }
+  }
+  &.priority-medium {
+    color: var(--priority-medium);
+    background: var(--priority-medium-bg);
+    &::before { background: var(--priority-medium); }
+  }
+  &.priority-high {
+    color: var(--priority-high);
+    background: var(--priority-high-bg);
+    &::before { background: var(--priority-high); }
+  }
+  &.priority-urgent {
+    color: var(--priority-urgent);
+    background: var(--priority-urgent-bg);
+    &::before {
+      background: var(--priority-urgent);
+      animation: urgentPulse 1.8s ease-in-out infinite;
+    }
+  }
+}
+
+// ─── Due Date ────────────────────────────────────────────────────────────────
+.due-date {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-secondary);
+
+  &.overdue {
+    color: var(--overdue-red);
+    font-weight: 600;
+  }
+}
+
+// ─── Cell Action ─────────────────────────────────────────────────────────────
+.cell-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+// ─── Action Buttons ──────────────────────────────────────────────────────────
+.action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-muted);
+  border-radius: var(--radius);
+  opacity: 0;
+  transform: translateX(6px);
+  transition: opacity 150ms ease, transform 150ms ease, background 150ms ease, color 150ms ease;
+  padding: 0;
+  margin: 0 auto;
+
+  &:hover {
+    background: var(--bg-hover);
+    color: var(--overdue-red);
+  }
+
+  &.restore-btn:hover { color: var(--accent); }
+
+  &.edit-btn {
+    &:hover {
+      color: var(--accent);
+      background: var(--bg-hover);
+    }
+
+    &.active {
+      color: var(--accent);
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  &.permanent-delete-btn:hover { color: var(--overdue-red); }
+
+  &.always-visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .btn-icon {
+    font-size: 18px;
+  }
+}
+
+// ─── Add Subtask Button ─────────────────────────────────────────────────────
+.add-subtask-btn:hover {
+  color: var(--accent) !important;
+  background: var(--bg-hover);
+}

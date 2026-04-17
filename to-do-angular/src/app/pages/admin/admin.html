@@ -1,0 +1,174 @@
+<div class="admin-page">
+  <div class="admin-header">
+    <div class="admin-header-left">
+      <button class="btn-back" (click)="goBack()">
+        <span class="material-symbols-rounded">arrow_back</span>
+        Back to app
+      </button>
+      <h2 class="admin-title">User Management</h2>
+    </div>
+    <button class="btn-create" (click)="showCreateDialog.set(true)">
+      <span class="material-symbols-rounded">person_add</span>
+      Create User
+    </button>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="search-wrap">
+      <span class="material-symbols-rounded search-icon">search</span>
+      <input
+        class="search-input"
+        type="text"
+        placeholder="Search by email…"
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)"
+      />
+    </div>
+
+    <select class="filter-select" [ngModel]="subFilter()" (ngModelChange)="subFilter.set($event)">
+      <option value="all">All plans</option>
+      <option value="free">Free</option>
+      <option value="active">Pro</option>
+      <option value="canceled">Canceled</option>
+    </select>
+
+    <select class="filter-select" [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)">
+      <option value="all">All statuses</option>
+      <option value="active">Active</option>
+      <option value="inactive">Inactive</option>
+    </select>
+  </div>
+
+  <!-- Table -->
+  @if (adminService.loading()) {
+    <div class="loading-row">Loading users…</div>
+  } @else if (adminService.error()) {
+    <div class="error-row">{{ adminService.error() }}</div>
+  } @else {
+    <div class="table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th class="col-email th-sortable" [class.sorted-asc]="sortColumn()==='email'&&sortDirection()==='asc'" [class.sorted-desc]="sortColumn()==='email'&&sortDirection()==='desc'" (click)="toggleSort('email')">
+              Email <span class="sort-icon">&#9650;</span>
+            </th>
+            <th class="col-date th-sortable" [class.sorted-asc]="sortColumn()==='createdAt'&&sortDirection()==='asc'" [class.sorted-desc]="sortColumn()==='createdAt'&&sortDirection()==='desc'" (click)="toggleSort('createdAt')">
+              Signed up <span class="sort-icon">&#9650;</span>
+            </th>
+            <th class="col-status th-sortable" [class.sorted-asc]="sortColumn()==='isActive'&&sortDirection()==='asc'" [class.sorted-desc]="sortColumn()==='isActive'&&sortDirection()==='desc'" (click)="toggleSort('isActive')">
+              Status <span class="sort-icon">&#9650;</span>
+            </th>
+            <th class="col-sub th-sortable" [class.sorted-asc]="sortColumn()==='subscriptionStatus'&&sortDirection()==='asc'" [class.sorted-desc]="sortColumn()==='subscriptionStatus'&&sortDirection()==='desc'" (click)="toggleSort('subscriptionStatus')">
+              Plan <span class="sort-icon">&#9650;</span>
+            </th>
+            <th class="col-renewal th-sortable" [class.sorted-asc]="sortColumn()==='subscriptionEndDate'&&sortDirection()==='asc'" [class.sorted-desc]="sortColumn()==='subscriptionEndDate'&&sortDirection()==='desc'" (click)="toggleSort('subscriptionEndDate')">
+              Next renewal <span class="sort-icon">&#9650;</span>
+            </th>
+            <th class="col-tasks th-sortable" [class.sorted-asc]="sortColumn()==='activeTasks'&&sortDirection()==='asc'" [class.sorted-desc]="sortColumn()==='activeTasks'&&sortDirection()==='desc'" (click)="toggleSort('activeTasks')">
+              Active <span class="sort-icon">&#9650;</span>
+            </th>
+            <th class="col-tasks th-sortable" [class.sorted-asc]="sortColumn()==='completedTasks'&&sortDirection()==='asc'" [class.sorted-desc]="sortColumn()==='completedTasks'&&sortDirection()==='desc'" (click)="toggleSort('completedTasks')">
+              Done <span class="sort-icon">&#9650;</span>
+            </th>
+            <th class="col-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of filteredUsers(); track user.id) {
+            <tr [class.loading-row-inline]="actionLoading() === user.id">
+              <td class="col-email">
+                <span class="email-text">{{ user.email }}</span>
+                @if (user.isAdmin) {
+                  <span class="badge admin-badge">Admin</span>
+                }
+              </td>
+              <td class="col-date muted">{{ formatDate(user.createdAt) }}</td>
+              <td class="col-status">
+                @if (user.isActive) {
+                  <span class="pill pill-active">Active</span>
+                } @else {
+                  <span class="pill pill-inactive">Inactive</span>
+                }
+              </td>
+              <td class="col-sub">
+                @if (user.subscriptionStatus === 'active') {
+                  <span class="pill pill-pro">Pro</span>
+                } @else if (user.subscriptionStatus === 'canceled') {
+                  <span class="pill pill-canceled">Canceled</span>
+                } @else {
+                  <span class="pill pill-free">Free</span>
+                }
+              </td>
+              <td class="col-renewal muted">{{ formatDate(user.subscriptionEndDate) }}</td>
+              <td class="col-tasks mono">{{ user.activeTasks }}</td>
+              <td class="col-tasks mono">{{ user.completedTasks }}</td>
+              <td class="col-actions">
+                <div class="actions-row">
+                  @if (user.isActive) {
+                    <button
+                      class="action-btn deactivate-btn"
+                      title="Deactivate"
+                      [disabled]="!!actionLoading() || isCurrentUser(user.id)"
+                      (click)="requestDeactivate(user)"
+                    >
+                      <span class="material-symbols-rounded">block</span>
+                    </button>
+                  } @else {
+                    <button
+                      class="action-btn activate-btn"
+                      title="Activate"
+                      [disabled]="!!actionLoading()"
+                      (click)="requestActivate(user)"
+                    >
+                      <span class="material-symbols-rounded">check_circle</span>
+                    </button>
+                  }
+
+                  <button
+                    class="action-btn reset-btn"
+                    title="Send password reset"
+                    [disabled]="!!actionLoading()"
+                    (click)="requestResetPassword(user)"
+                  >
+                    <span class="material-symbols-rounded">lock_reset</span>
+                  </button>
+
+                  <button
+                    class="action-btn admin-toggle-btn"
+                    [class.is-admin]="user.isAdmin"
+                    [title]="user.isAdmin ? 'Remove admin' : 'Make admin'"
+                    [disabled]="!!actionLoading() || isCurrentUser(user.id)"
+                    (click)="requestToggleAdmin(user)"
+                  >
+                    <span class="material-symbols-rounded">shield</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="8" class="empty-row">No users match the current filters.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+<!-- Confirm dialog -->
+@if (pendingAction()) {
+  <app-confirm-dialog
+    [title]="confirmDialogConfig.title"
+    [message]="confirmDialogConfig.message"
+    [confirmLabel]="confirmDialogConfig.label"
+    (confirmed)="confirmAction()"
+    (cancelled)="cancelAction()"
+  />
+}
+
+<!-- Create user dialog -->
+@if (showCreateDialog()) {
+  <app-admin-create-user-dialog (closed)="showCreateDialog.set(false)" />
+}

@@ -1,0 +1,2 @@
+create SAS
+after the prompt asks min of 40 questions to plan better

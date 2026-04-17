@@ -1,0 +1,30 @@
+<nav class="tab-bar">
+  <a class="tab-link" routerLink="/active" routerLinkActive="active">
+    Active
+    <span class="tab-count">{{ taskService.activeTasks().length }}</span>
+  </a>
+
+  <a class="tab-link"
+     [class.locked]="!subscriptionService.isPro()"
+     routerLink="/completed"
+     routerLinkActive="active"
+     (click)="!subscriptionService.isPro() && onLockedTabClick($event)">
+    Completed
+    <span class="tab-count">{{ taskService.completedTasks().length }}</span>
+    @if (!subscriptionService.isPro()) {
+      <app-pro-chip class="tab-pro-chip" />
+    }
+  </a>
+
+  <a class="tab-link"
+     [class.locked]="!subscriptionService.isPro()"
+     routerLink="/deleted"
+     routerLinkActive="active"
+     (click)="!subscriptionService.isPro() && onLockedTabClick($event)">
+    Deleted
+    <span class="tab-count">{{ taskService.deletedTasks().length }}</span>
+    @if (!subscriptionService.isPro()) {
+      <app-pro-chip class="tab-pro-chip" />
+    }
+  </a>
+</nav>

@@ -1,0 +1,48 @@
+<div class="user-menu">
+  <button class="menu-trigger" (click)="toggle()">
+    <span class="material-symbols-rounded user-icon">account_circle</span>
+    <span class="user-email-text">{{ authService.userEmail() }}</span>
+    <span class="material-symbols-rounded chevron" [class.open]="open()">expand_more</span>
+  </button>
+
+  @if (open()) {
+    <div class="dropdown">
+      <div class="plan-row">
+        @if (subscriptionService.isPro()) {
+          <span class="plan-pill pro">Pro Plan</span>
+          @if (subscriptionService.subscriptionEndDate()) {
+            <span class="renews-text">Renews {{ formatEndDate(subscriptionService.subscriptionEndDate()) }}</span>
+          }
+        } @else {
+          <span class="plan-pill free">Free Plan</span>
+        }
+      </div>
+
+      @if (subscriptionService.isPro()) {
+        <button class="dropdown-btn billing-btn" (click)="onBillingPortal()">
+          <span class="material-symbols-rounded btn-icon">receipt_long</span>
+          Manage billing
+        </button>
+      } @else {
+        <button class="dropdown-btn upgrade-btn" (click)="onUpgrade()">
+          <span class="material-symbols-rounded btn-icon">star</span>
+          Upgrade to Pro
+        </button>
+      }
+
+      @if (subscriptionService.isAdmin()) {
+        <button class="dropdown-btn admin-btn" (click)="goToAdmin()">
+          <span class="material-symbols-rounded btn-icon">admin_panel_settings</span>
+          Admin Panel
+        </button>
+      }
+
+      <div class="divider"></div>
+
+      <button class="dropdown-btn signout-btn" (click)="onSignOut()">
+        <span class="material-symbols-rounded btn-icon">logout</span>
+        Sign out
+      </button>
+    </div>
+  }
+</div>

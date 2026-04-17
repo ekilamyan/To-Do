@@ -1,0 +1,141 @@
+:host {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  pointer-events: all;
+}
+
+.dialog-card {
+  position: relative;
+  z-index: 1;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+  padding: 32px;
+  width: 100%;
+  max-width: 440px;
+  pointer-events: all;
+}
+
+.close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius);
+  padding: 4px;
+  transition: color 150ms;
+
+  &:hover { color: var(--text-primary); }
+
+  .material-symbols-rounded { font-size: 20px; }
+}
+
+.dialog-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.plan-badge {
+  display: inline-block;
+  font-family: 'Sora', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--accent-light);
+  padding: 4px 14px;
+  border-radius: 99px;
+  letter-spacing: 0.01em;
+  margin-bottom: 14px;
+}
+
+.price {
+  font-family: 'Sora', sans-serif;
+  font-size: 42px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -1px;
+}
+
+.price-period {
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--text-muted);
+  letter-spacing: 0;
+}
+
+.feature-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 28px;
+
+  th, td {
+    padding: 10px 8px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  .col-header {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    width: 20%;
+
+    &.pro { color: var(--accent); }
+  }
+
+  .feature-name {
+    color: var(--text-secondary);
+    width: 60%;
+    font-weight: 500;
+  }
+
+  .feature-cell {
+    text-align: center;
+    font-size: 15px;
+    font-weight: 600;
+    width: 20%;
+  }
+
+  .check { color: var(--accent); }
+  .cross { color: var(--text-muted); }
+}
+
+.upgrade-btn {
+  width: 100%;
+  padding: 13px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms;
+  letter-spacing: -0.2px;
+
+  &:hover:not([disabled]) { background: var(--accent-hover); }
+  &[disabled] { opacity: 0.7; cursor: default; }
+}

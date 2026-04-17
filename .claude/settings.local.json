@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(curl -sL \"https://raw.githubusercontent.com/anthropics/skills/main/skills/theme-factory/SKILL.md\" -o \"/c/Users/Edgar/Desktop/To Do/to-do-angular/.claude/skills/theme-factory.md\")",
+      "Bash(mkdir -p \"/c/Users/Edgar/Desktop/To Do/to-do-angular/.claude/skills/scripts\")",
+      "Bash(mkdir -p \"/c/Users/Edgar/Desktop/To Do/to-do-angular/.claude/skills/themes\")",
+      "Bash(curl -sL \"https://raw.githubusercontent.com/anthropics/skills/main/skills/webapp-testing/scripts/with_server.py\" -o \"/c/Users/Edgar/Desktop/To Do/to-do-angular/.claude/skills/scripts/with_server.py\")",
+      "Bash(npx ng:*)",
+      "Bash(netstat -ano)",
+      "Bash(npm install:*)",
+      "Bash(npx supabase:*)"
+    ]
+  }
+}

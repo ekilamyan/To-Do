@@ -1,0 +1,110 @@
+<div class="login-bg">
+  <div class="login-card">
+
+    <h1 class="login-title">Taskflow</h1>
+
+    @if (message()) {
+      <div class="login-message" [class.error]="message()!.type === 'error'" [class.success]="message()!.type === 'success'">
+        {{ message()!.text }}
+      </div>
+    }
+
+    <!-- LOGIN VIEW -->
+    @if (view() === 'login') {
+      <p class="login-subtitle">Sign in to your account</p>
+      <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
+        <div class="field">
+          <label for="login-email">Email</label>
+          <input id="login-email" type="email" formControlName="email" autocomplete="email" placeholder="you@example.com" />
+          @if (loginForm.get('email')?.touched && loginForm.get('email')?.invalid) {
+            <span class="field-error">Enter a valid email address</span>
+          }
+        </div>
+        <div class="field">
+          <label for="login-password">Password</label>
+          <div class="input-wrap">
+            <input id="login-password" [type]="showLoginPassword() ? 'text' : 'password'" formControlName="password" autocomplete="current-password" placeholder="••••••••" />
+            <button type="button" class="eye-btn" (click)="showLoginPassword.update(v => !v)">
+              <span class="material-symbols-rounded">{{ showLoginPassword() ? 'visibility_off' : 'visibility' }}</span>
+            </button>
+          </div>
+          @if (loginForm.get('password')?.touched && loginForm.get('password')?.invalid) {
+            <span class="field-error">Password must be at least 8 characters</span>
+          }
+        </div>
+        <button type="submit" class="btn-primary" [disabled]="loading()">
+          {{ loading() ? 'Signing in…' : 'Sign in' }}
+        </button>
+      </form>
+      <div class="login-links">
+        <button type="button" (click)="setView('forgot')">Forgot password?</button>
+        <button type="button" (click)="setView('signup')">Create account</button>
+      </div>
+    }
+
+    <!-- SIGNUP VIEW -->
+    @if (view() === 'signup') {
+      <p class="login-subtitle">Create a new account</p>
+      <form [formGroup]="signupForm" (ngSubmit)="onSignup()">
+        <div class="field">
+          <label for="signup-email">Email</label>
+          <input id="signup-email" type="email" formControlName="email" autocomplete="email" placeholder="you@example.com" />
+          @if (signupForm.get('email')?.touched && signupForm.get('email')?.invalid) {
+            <span class="field-error">Enter a valid email address</span>
+          }
+        </div>
+        <div class="field">
+          <label for="signup-password">Password</label>
+          <div class="input-wrap">
+            <input id="signup-password" [type]="showSignupPassword() ? 'text' : 'password'" formControlName="password" autocomplete="new-password" placeholder="Min. 8 characters" />
+            <button type="button" class="eye-btn" (click)="showSignupPassword.update(v => !v)">
+              <span class="material-symbols-rounded">{{ showSignupPassword() ? 'visibility_off' : 'visibility' }}</span>
+            </button>
+          </div>
+          @if (signupForm.get('password')?.touched && signupForm.get('password')?.invalid) {
+            <span class="field-error">Password must be at least 8 characters</span>
+          }
+        </div>
+        <div class="field">
+          <label for="signup-confirm">Confirm password</label>
+          <div class="input-wrap">
+            <input id="signup-confirm" [type]="showSignupConfirm() ? 'text' : 'password'" formControlName="confirmPassword" autocomplete="new-password" placeholder="••••••••" />
+            <button type="button" class="eye-btn" (click)="showSignupConfirm.update(v => !v)">
+              <span class="material-symbols-rounded">{{ showSignupConfirm() ? 'visibility_off' : 'visibility' }}</span>
+            </button>
+          </div>
+          @if (signupForm.get('confirmPassword')?.touched && signupForm.errors?.['passwordMismatch']) {
+            <span class="field-error">Passwords do not match</span>
+          }
+        </div>
+        <button type="submit" class="btn-primary" [disabled]="loading()">
+          {{ loading() ? 'Creating account…' : 'Create account' }}
+        </button>
+      </form>
+      <div class="login-links">
+        <button type="button" (click)="setView('login')">Back to sign in</button>
+      </div>
+    }
+
+    <!-- FORGOT VIEW -->
+    @if (view() === 'forgot') {
+      <p class="login-subtitle">Reset your password</p>
+      <form [formGroup]="forgotForm" (ngSubmit)="onForgot()">
+        <div class="field">
+          <label for="forgot-email">Email</label>
+          <input id="forgot-email" type="email" formControlName="email" autocomplete="email" placeholder="you@example.com" />
+          @if (forgotForm.get('email')?.touched && forgotForm.get('email')?.invalid) {
+            <span class="field-error">Enter a valid email address</span>
+          }
+        </div>
+        <button type="submit" class="btn-primary" [disabled]="loading()">
+          {{ loading() ? 'Sending…' : 'Send reset email' }}
+        </button>
+      </form>
+      <div class="login-links">
+        <button type="button" (click)="setView('login')">Back to sign in</button>
+      </div>
+    }
+
+  </div>
+</div>

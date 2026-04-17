@@ -1,0 +1,54 @@
+@if (subscriptionService.dialogOpen()) {
+  <div class="backdrop" (click)="subscriptionService.closePricingDialog()"></div>
+  <div class="dialog-card">
+    <button class="close-btn" (click)="subscriptionService.closePricingDialog()">
+      <span class="material-symbols-rounded">close</span>
+    </button>
+
+    <div class="dialog-header">
+      <span class="plan-badge">Taskflow Pro</span>
+      <div class="price">$5<span class="price-period"> / month</span></div>
+    </div>
+
+    <table class="feature-table">
+      <thead>
+        <tr>
+          <th class="feature-name"></th>
+          <th class="col-header">Free</th>
+          <th class="col-header pro">Pro</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="feature-name">Active tasks</td>
+          <td class="feature-cell check">✓</td>
+          <td class="feature-cell check">✓</td>
+        </tr>
+        <tr>
+          <td class="feature-name">Completed tab</td>
+          <td class="feature-cell cross">✗</td>
+          <td class="feature-cell check">✓</td>
+        </tr>
+        <tr>
+          <td class="feature-name">Deleted tab + restore</td>
+          <td class="feature-cell cross">✗</td>
+          <td class="feature-cell check">✓</td>
+        </tr>
+        <tr>
+          <td class="feature-name">Dark mode</td>
+          <td class="feature-cell cross">✗</td>
+          <td class="feature-cell check">✓</td>
+        </tr>
+        <tr>
+          <td class="feature-name">Priority field</td>
+          <td class="feature-cell cross">✗</td>
+          <td class="feature-cell check">✓</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <button class="upgrade-btn" (click)="onUpgrade()" [disabled]="loading">
+      {{ loading ? 'Redirecting...' : 'Upgrade Now' }}
+    </button>
+  </div>
+}

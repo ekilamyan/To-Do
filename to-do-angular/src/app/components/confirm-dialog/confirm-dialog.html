@@ -1,0 +1,9 @@
+<div class="dialog-backdrop" (click)="cancelled.emit()"></div>
+<div class="dialog-card">
+  <h3 class="dialog-title">{{ title() }}</h3>
+  <p class="dialog-message">{{ message() }}</p>
+  <div class="dialog-actions">
+    <button class="btn-cancel" (click)="cancelled.emit()">Cancel</button>
+    <button class="btn-confirm" (click)="confirmed.emit()">{{ confirmLabel() }}</button>
+  </div>
+</div>

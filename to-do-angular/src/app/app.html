@@ -1,0 +1,26 @@
+<div class="app-container">
+  @if (!isLoginRoute()) {
+    <header class="app-header">
+      <h1 class="app-title">Taskflow</h1>
+      <div class="header-actions">
+        @if (isActiveTab()) {
+          <button class="add-task-btn" (click)="onAddTask()">+ Task</button>
+        }
+        @if (authService.userEmail()) {
+          <app-user-menu />
+        }
+        <app-theme-toggle />
+      </div>
+    </header>
+    @if (!isAdminRoute()) {
+      <nav class="app-nav">
+        <app-tab-bar />
+      </nav>
+    }
+  }
+  <main class="app-main">
+    <router-outlet />
+  </main>
+  <app-snackbar />
+  <app-pricing-dialog />
+</div>

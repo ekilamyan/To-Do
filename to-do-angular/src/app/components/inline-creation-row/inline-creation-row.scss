@@ -1,0 +1,128 @@
+:host {
+  display: contents;
+}
+
+.creation-row {
+  display: grid;
+  grid-template-columns: 44px 34px 1fr 1fr 120px 140px 150px 90px;
+  align-items: center;
+  min-height: 50px;
+  padding: 0 8px;
+  background: var(--bg-creation-row);
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 150ms ease;
+
+  &:hover { background: var(--bg-hover); }
+
+  &.active {
+    background: var(--bg-primary);
+    // Top accent stripe when focused — mirrors the edit-mode stripe
+    position: relative;
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--accent);
+      border-radius: 0 0 2px 2px;
+    }
+  }
+}
+
+.creation-cell {
+  padding: 4px 8px;
+}
+
+.creation-cell-title {
+  grid-column: 1 / 4;
+  padding-left: 12px;
+}
+
+.creation-input {
+  width: 100%;
+  padding: 5px 8px;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: all 150ms ease;
+
+  &::placeholder { color: var(--text-placeholder); }
+
+  &:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+}
+
+.creation-select {
+  width: 100%;
+  padding: 5px 8px;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+  transition: all 150ms ease;
+
+  &:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+    color: var(--text-primary);
+  }
+}
+
+
+.creation-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.save-btn {
+  padding: 4px 12px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 150ms ease;
+
+  &:hover {
+    background: var(--accent-hover);
+  }
+}
+
+.cancel-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 150ms ease;
+  flex-shrink: 0;
+
+  .material-symbols-rounded { font-size: 18px; }
+
+  &:hover {
+    background: rgba(229, 62, 62, 0.08);
+    color: #e53e3e;
+  }
+}

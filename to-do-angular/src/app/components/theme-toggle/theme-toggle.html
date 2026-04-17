@@ -1,0 +1,12 @@
+<div class="toggle-wrap">
+  <button class="theme-toggle-btn" (click)="onToggleClick()" [attr.aria-label]="themeService.isDark() ? 'Switch to light mode' : 'Switch to dark mode'">
+    @if (themeService.isDark()) {
+      <span class="material-symbols-rounded icon">light_mode</span>
+    } @else {
+      <span class="material-symbols-rounded icon">dark_mode</span>
+    }
+  </button>
+  @if (!subscriptionService.isPro()) {
+    <app-pro-chip class="toggle-pro-chip" />
+  }
+</div>
