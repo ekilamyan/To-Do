@@ -9,7 +9,9 @@
       "Bash(npx ng:*)",
       "Bash(netstat -ano)",
       "Bash(npm install:*)",
-      "Bash(npx supabase:*)"
+      "Bash(npx supabase:*)",
+      "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); proj=list\\(d['projects'].keys\\(\\)\\)[0]; build=d['projects'][proj]['architect']['build']; print\\('outputPath:', build['options'].get\\('outputPath'\\)\\); print\\('project name:', proj\\)\")",
+      "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); proj=list\\(d['projects'].keys\\(\\)\\)[0]; build=d['projects'][proj]['architect']['build']; print\\(json.dumps\\(build['options'], indent=2\\)\\)\")"
     ]
   }
 }
