@@ -1,0 +1,127 @@
+<div class="settings-page">
+  <div class="settings-header">
+    <h1 class="settings-title">Settings</h1>
+  </div>
+
+  <div class="settings-body">
+
+    <!-- ─── Asana Integration ──────────────────────────────────────────── -->
+    <section class="settings-card">
+      <div class="card-header">
+        <div class="card-title-row">
+          <img src="https://luna1.co/ec9df8.png" alt="Asana" class="asana-logo" />
+          <h2 class="card-title">Asana Integration</h2>
+        </div>
+        <p class="card-description">
+          Sync your tasks bidirectionally with an Asana project. Changes in either place reflect in real time.
+        </p>
+      </div>
+
+      <!-- Connected state -->
+      @if (asana.isConnected()) {
+        <div class="connected-state">
+          <div class="connected-badge">
+            <span class="material-symbols-rounded connected-icon">check_circle</span>
+            <span class="connected-text">Connected</span>
+          </div>
+          <div class="connected-detail">
+            <span class="material-symbols-rounded detail-icon">folder</span>
+            <span>{{ subscriptionService.asanaProjectGid() }}</span>
+          </div>
+          <button
+            class="btn btn-danger"
+            (click)="onDisconnect()"
+            [disabled]="disconnecting()"
+          >
+            @if (disconnecting()) {
+              <span class="material-symbols-rounded spin">progress_activity</span>
+              Disconnecting…
+            } @else {
+              <span class="material-symbols-rounded">link_off</span>
+              Disconnect Asana
+            }
+          </button>
+        </div>
+      }
+
+      <!-- Not connected state -->
+      @if (!asana.isConnected()) {
+        <div class="setup-form">
+
+          <div class="form-group">
+            <label class="form-label" for="pat-input">
+              Personal Access Token
+              <a
+                href="https://app.asana.com/0/my-apps"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="help-link"
+              >Get one ↗</a>
+            </label>
+            <div class="pat-input-row">
+              <input
+                id="pat-input"
+                class="form-input"
+                [type]="showPat() ? 'text' : 'password'"
+                placeholder="1/xxxxxxxxxxxxxxxx…"
+                [value]="pat()"
+                (input)="onPatInput($any($event.target).value)"
+                autocomplete="off"
+              />
+              <button class="icon-btn" (click)="showPat.update(v => !v)" type="button" title="Toggle visibility">
+                <span class="material-symbols-rounded">{{ showPat() ? 'visibility_off' : 'visibility' }}</span>
+              </button>
+            </div>
+          </div>
+
+          <button
+            class="btn btn-secondary"
+            (click)="onLoadProjects()"
+            [disabled]="!canFetchProjects || loadingProjects()"
+          >
+            @if (loadingProjects()) {
+              <span class="material-symbols-rounded spin">progress_activity</span>
+              Loading…
+            } @else {
+              <span class="material-symbols-rounded">refresh</span>
+              Load Projects
+            }
+          </button>
+
+          @if (projects().length > 0) {
+            <div class="form-group">
+              <label class="form-label" for="project-select">Select Project</label>
+              <select
+                id="project-select"
+                class="form-select"
+                [value]="selectedProjectGid()"
+                (change)="selectedProjectGid.set($any($event.target).value)"
+              >
+                <option value="" disabled>Choose a project…</option>
+                @for (project of projects(); track project.gid) {
+                  <option [value]="project.gid">{{ project.name }} — {{ project.workspace }}</option>
+                }
+              </select>
+            </div>
+
+            <button
+              class="btn btn-primary"
+              (click)="onConnect()"
+              [disabled]="!canConnect || connecting()"
+            >
+              @if (connecting()) {
+                <span class="material-symbols-rounded spin">progress_activity</span>
+                Connecting…
+              } @else {
+                <span class="material-symbols-rounded">link</span>
+                Connect to Asana
+              }
+            </button>
+          }
+
+        </div>
+      }
+
+    </section>
+  </div>
+</div>

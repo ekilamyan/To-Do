@@ -15,10 +15,12 @@ export interface TaskRow {
   completed_at: string | null;
   is_expanded: boolean;
   sort_order: number;
+  asana_gid: string | null;
+  updated_at: string;
 }
 
-export type TaskInsert = Omit<TaskRow, 'id' | 'user_id' | 'created_at'>;
-export type TaskUpdate = Partial<Omit<TaskRow, 'id' | 'user_id' | 'created_at'>>;
+export type TaskInsert = Omit<TaskRow, 'id' | 'user_id' | 'created_at' | 'updated_at'>;
+export type TaskUpdate = Partial<Omit<TaskRow, 'id' | 'user_id' | 'created_at' | 'updated_at'>>;
 
 export function rowToTask(row: TaskRow): Task {
   return {
@@ -35,6 +37,7 @@ export function rowToTask(row: TaskRow): Task {
     completedAt: row.completed_at ? new Date(row.completed_at) : null,
     isExpanded: row.is_expanded ?? false,
     sortOrder: row.sort_order ?? 0,
+    asanaGid: row.asana_gid ?? null,
   };
 }
 
@@ -51,6 +54,7 @@ export function taskToInsert(task: Task): TaskInsert {
     completed_at: task.completedAt ? task.completedAt.toISOString() : null,
     is_expanded: task.isExpanded,
     sort_order: task.sortOrder,
+    asana_gid: task.asanaGid ?? null,
   };
 }
 
@@ -67,5 +71,6 @@ export function taskToUpdate(partial: Partial<Task>): TaskUpdate {
   if ('completedAt' in partial) update.completed_at = partial.completedAt ? partial.completedAt.toISOString() : null;
   if ('isExpanded' in partial)  update.is_expanded  = partial.isExpanded!;
   if ('sortOrder' in partial)   update.sort_order   = partial.sortOrder!;
+  if ('asanaGid' in partial)    update.asana_gid    = partial.asanaGid ?? null;
   return update;
 }

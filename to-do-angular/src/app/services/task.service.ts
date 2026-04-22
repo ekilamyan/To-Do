@@ -1,18 +1,21 @@
 import { Injectable, signal, computed, effect, inject } from '@angular/core';
-import { SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseClient, RealtimeChannel } from '@supabase/supabase-js';
 import { Task, TaskStatus, Priority } from '../models/task.model';
 import { SUPABASE_CLIENT } from '../core/supabase.client';
 import { AuthService } from './auth.service';
 import { rowToTask, taskToInsert, taskToUpdate, TaskRow } from '../models/mapper';
+import { AsanaService } from './asana.service';
 
 @Injectable({ providedIn: 'root' })
 export class TaskService {
   private supabase     = inject<SupabaseClient>(SUPABASE_CLIENT);
   private authService  = inject(AuthService);
+  private asana        = inject(AsanaService);
 
-  private tasksMap = signal<Map<string, Task>>(new Map());
-  assigneePool     = signal<string[]>([]);
-  loading          = signal<boolean>(false);
+  private tasksMap         = signal<Map<string, Task>>(new Map());
+  private realtimeChannel: RealtimeChannel | null = null;
+  assigneePool             = signal<string[]>([]);
+  loading                  = signal<boolean>(false);
 
   /** undefined = not creating, null = creating top-level task, string = creating subtask under that parent */
   creatingTaskParentId = signal<string | null | undefined>(undefined);
@@ -36,10 +39,46 @@ export class TaskService {
       if (this.authService.isLoggedIn()) {
         this.loadTasks();
         this.loadAssignees();
+        this.setupRealtime();
       } else {
         this.tasksMap.set(new Map());
         this.assigneePool.set([]);
+        this.teardownRealtime();
       }
+    });
+  }
+
+  private setupRealtime(): void {
+    this.teardownRealtime();
+    this.realtimeChannel = this.supabase
+      .channel('tasks-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'tasks' },
+        (payload) => this.handleRealtimeChange(payload),
+      )
+      .subscribe();
+  }
+
+  private teardownRealtime(): void {
+    if (this.realtimeChannel) {
+      this.supabase.removeChannel(this.realtimeChannel);
+      this.realtimeChannel = null;
+    }
+  }
+
+  private handleRealtimeChange(payload: { eventType: string; new: unknown; old: unknown }): void {
+    const { eventType, new: newRow, old: oldRow } = payload;
+    this.tasksMap.update(map => {
+      const next = new Map(map);
+      if (eventType === 'INSERT' || eventType === 'UPDATE') {
+        const task = rowToTask(newRow as TaskRow);
+        next.set(task.id, task);
+      } else if (eventType === 'DELETE') {
+        const id = (oldRow as { id: string }).id;
+        next.delete(id);
+      }
+      return next;
     });
   }
 
@@ -153,6 +192,7 @@ export class TaskService {
       completedAt: null,
       isExpanded: false,
       sortOrder: Date.now(),
+      asanaGid: null,
     };
 
     // Optimistic update
@@ -185,6 +225,18 @@ export class TaskService {
       return next;
     });
 
+    // Async: create in Asana and write back the asana_gid
+    this.asana.syncCreateTask(saved, (asanaGid) => {
+      this.supabase.from('tasks').update({ asana_gid: asanaGid }).eq('id', saved.id).then(() => {
+        this.tasksMap.update(map => {
+          const next = new Map(map);
+          const t = next.get(saved.id);
+          if (t) next.set(saved.id, { ...t, asanaGid });
+          return next;
+        });
+      });
+    });
+
     return saved;
   }
 
@@ -209,6 +261,13 @@ export class TaskService {
 
     if (error) {
       await this.reloadFromDb();
+      return;
+    }
+
+    // Sync field changes to Asana (non-blocking)
+    const task = this.tasksMap().get(id);
+    if (task?.asanaGid) {
+      this.asana.syncUpdateTask(task.asanaGid, changes);
     }
   }
 
@@ -222,7 +281,9 @@ export class TaskService {
       if (sub && sub.status !== TaskStatus.Completed) return false;
     }
 
+    const asanaGid = map.get(id)?.asanaGid ?? null;
     await this.updateTask(id, { status: TaskStatus.Completed, completedAt: new Date() });
+    if (asanaGid) this.asana.syncCompleteTask(asanaGid);
     return true;
   }
 
@@ -230,6 +291,7 @@ export class TaskService {
     const map = this.tasksMap();
     const task = map.get(id);
     if (!task) return;
+    const asanaGid = task.asanaGid;
 
     // Build all IDs to soft-delete
     const idsToDelete = [id, ...task.subtaskIds];
@@ -270,13 +332,15 @@ export class TaskService {
       }
     }
 
-    if (error) await this.reloadFromDb();
+    if (error) { await this.reloadFromDb(); return; }
+    if (asanaGid) this.asana.syncDeleteTask(asanaGid);
   }
 
   async restoreTask(id: string): Promise<boolean> {
     const map = this.tasksMap();
     const task = map.get(id);
     if (!task) return false;
+    const asanaGid = task.asanaGid;
 
     if (task.parentId) {
       const parent = map.get(task.parentId);
@@ -319,7 +383,8 @@ export class TaskService {
       }
     }
 
-    if (error) await this.reloadFromDb();
+    if (error) { await this.reloadFromDb(); return false; }
+    if (asanaGid) this.asana.syncRestoreTask(asanaGid);
     return true;
   }
 
@@ -369,6 +434,7 @@ export class TaskService {
       completedAt: null,
       isExpanded: false,
       sortOrder: Date.now(),
+      asanaGid: null,
     };
 
     // Optimistic: add task AND update parent subtaskIds in one synchronous update
@@ -398,7 +464,36 @@ export class TaskService {
       return null;
     }
 
-    return rowToTask(subtaskResult.data as TaskRow);
+    const savedSubtask = rowToTask(subtaskResult.data as TaskRow);
+
+    // Sync subtask to Asana under parent's asana_gid (non-blocking)
+    const parentAsanaGid = this.tasksMap().get(parentId)?.asanaGid ?? null;
+    if (parentAsanaGid) {
+      this.asana.syncCreateSubtask(savedSubtask, parentAsanaGid, (asanaGid) => {
+        this.supabase.from('tasks').update({ asana_gid: asanaGid }).eq('id', savedSubtask.id).then(() => {
+          this.tasksMap.update(map => {
+            const next = new Map(map);
+            const t = next.get(savedSubtask.id);
+            if (t) next.set(savedSubtask.id, { ...t, asanaGid });
+            return next;
+          });
+        });
+      });
+    } else if (this.asana.isConnected()) {
+      // Parent has no asana_gid yet — create as a top-level task instead
+      this.asana.syncCreateTask(savedSubtask, (asanaGid) => {
+        this.supabase.from('tasks').update({ asana_gid: asanaGid }).eq('id', savedSubtask.id).then(() => {
+          this.tasksMap.update(map => {
+            const next = new Map(map);
+            const t = next.get(savedSubtask.id);
+            if (t) next.set(savedSubtask.id, { ...t, asanaGid });
+            return next;
+          });
+        });
+      });
+    }
+
+    return savedSubtask;
   }
 
   startCreatingTask(parentId: string | null): void {

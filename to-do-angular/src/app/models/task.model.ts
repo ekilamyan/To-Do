@@ -26,6 +26,7 @@ export interface Task {
   completedAt: Date | null;
   isExpanded: boolean;
   sortOrder: number;
+  asanaGid: string | null;
 }
 
 export const PRIORITY_WEIGHTS: Record<Priority, number> = {

@@ -53,4 +53,9 @@ export class UserMenuComponent {
     this.open.set(false);
     this.router.navigate(['/admin']);
   }
+
+  goToSettings(): void {
+    this.open.set(false);
+    this.router.navigate(['/settings']);
+  }
 }

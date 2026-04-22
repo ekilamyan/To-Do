@@ -11,6 +11,8 @@ interface Profile {
   subscription_status: 'free' | 'active' | 'canceled';
   subscription_end_date: string | null;
   is_admin: boolean;
+  asana_sync_enabled: boolean;
+  asana_project_gid: string | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -25,6 +27,8 @@ export class SubscriptionService {
   readonly isAdmin = computed(() => this.profile()?.is_admin === true);
   readonly subscriptionStatus = computed(() => this.profile()?.subscription_status ?? 'free');
   readonly subscriptionEndDate = computed(() => this.profile()?.subscription_end_date ?? null);
+  readonly asanaSyncEnabled = computed(() => this.profile()?.asana_sync_enabled ?? false);
+  readonly asanaProjectGid = computed(() => this.profile()?.asana_project_gid ?? null);
   readonly dialogOpen = signal(false);
   readonly profileLoading = signal(true);
 
