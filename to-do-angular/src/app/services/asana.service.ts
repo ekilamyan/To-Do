@@ -20,25 +20,39 @@ export class AsanaService {
 
   // ─── Connection management ───────────────────────────────────────────────
 
+  private async extractError(error: unknown): Promise<string> {
+    try {
+      const ctx = (error as { context?: Response }).context;
+      if (ctx?.json) {
+        const body = await ctx.json();
+        return body?.error ?? (error as Error).message ?? 'Unknown error';
+      }
+    } catch { /* ignore */ }
+    return (error as Error).message ?? 'Unknown error';
+  }
+
   async fetchProjects(pat: string): Promise<AsanaProject[]> {
     const { data, error } = await this.supabase.functions.invoke('asana-get-projects', {
       body: { pat },
     });
-    if (error) throw new Error(error.message ?? 'Failed to fetch projects');
+    if (error) throw new Error(await this.extractError(error));
+    if (data?.error) throw new Error(data.error);
     return data.projects as AsanaProject[];
   }
 
   async connect(pat: string, projectGid: string): Promise<void> {
-    const { error } = await this.supabase.functions.invoke('asana-connect', {
+    const { data, error } = await this.supabase.functions.invoke('asana-connect', {
       body: { pat, project_gid: projectGid },
     });
-    if (error) throw new Error(error.message ?? 'Failed to connect to Asana');
+    if (error) throw new Error(await this.extractError(error));
+    if (data?.error) throw new Error(data.error);
     await this.subscriptionService.loadProfile();
   }
 
   async disconnect(): Promise<void> {
-    const { error } = await this.supabase.functions.invoke('asana-disconnect', { body: {} });
-    if (error) throw new Error(error.message ?? 'Failed to disconnect from Asana');
+    const { data, error } = await this.supabase.functions.invoke('asana-disconnect', { body: {} });
+    if (error) throw new Error(await this.extractError(error));
+    if (data?.error) throw new Error(data.error);
     await this.subscriptionService.loadProfile();
   }
 
