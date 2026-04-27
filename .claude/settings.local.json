@@ -11,7 +11,11 @@
       "Bash(npm install:*)",
       "Bash(npx supabase:*)",
       "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); proj=list\\(d['projects'].keys\\(\\)\\)[0]; build=d['projects'][proj]['architect']['build']; print\\('outputPath:', build['options'].get\\('outputPath'\\)\\); print\\('project name:', proj\\)\")",
-      "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); proj=list\\(d['projects'].keys\\(\\)\\)[0]; build=d['projects'][proj]['architect']['build']; print\\(json.dumps\\(build['options'], indent=2\\)\\)\")"
+      "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); proj=list\\(d['projects'].keys\\(\\)\\)[0]; build=d['projects'][proj]['architect']['build']; print\\(json.dumps\\(build['options'], indent=2\\)\\)\")",
+      "mcp__claude_ai_Asana__asana_list_workspaces",
+      "mcp__claude_ai_Asana__asana_get_projects_for_workspace",
+      "mcp__claude_ai_Asana__asana_get_project_sections",
+      "Bash(grep -E \"\\\\.\\(ts|html|scss\\)$\")"
     ]
   }
 }
