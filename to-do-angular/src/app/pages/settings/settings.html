@@ -28,19 +28,36 @@
             <span class="material-symbols-rounded detail-icon">folder</span>
             <span>{{ subscriptionService.asanaProjectGid() }}</span>
           </div>
-          <button
-            class="btn btn-danger"
-            (click)="onDisconnect()"
-            [disabled]="disconnecting()"
-          >
-            @if (disconnecting()) {
-              <span class="material-symbols-rounded spin">progress_activity</span>
-              Disconnecting…
-            } @else {
-              <span class="material-symbols-rounded">link_off</span>
-              Disconnect Asana
-            }
-          </button>
+          <div class="connected-actions">
+            <button
+              class="btn btn-secondary"
+              (click)="onRefreshWebhook()"
+              [disabled]="refreshing() || disconnecting()"
+              title="Re-registers the Asana webhook to fix Asana→App sync"
+            >
+              @if (refreshing()) {
+                <span class="material-symbols-rounded spin">progress_activity</span>
+                Refreshing…
+              } @else {
+                <span class="material-symbols-rounded">sync</span>
+                Refresh Webhook
+              }
+            </button>
+
+            <button
+              class="btn btn-danger"
+              (click)="onDisconnect()"
+              [disabled]="disconnecting() || refreshing()"
+            >
+              @if (disconnecting()) {
+                <span class="material-symbols-rounded spin">progress_activity</span>
+                Disconnecting…
+              } @else {
+                <span class="material-symbols-rounded">link_off</span>
+                Disconnect
+              }
+            </button>
+          </div>
         </div>
       }
 

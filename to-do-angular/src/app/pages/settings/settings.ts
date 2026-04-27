@@ -22,6 +22,7 @@ export class SettingsComponent {
   protected loadingProjects = signal(false);
   protected connecting = signal(false);
   protected disconnecting = signal(false);
+  protected refreshing = signal(false);
   protected showPat = signal(false);
 
   get canFetchProjects(): boolean {
@@ -67,6 +68,19 @@ export class SettingsComponent {
       this.snackbar.show(msg);
     } finally {
       this.connecting.set(false);
+    }
+  }
+
+  async onRefreshWebhook(): Promise<void> {
+    this.refreshing.set(true);
+    try {
+      await this.asana.reconnect();
+      this.snackbar.show('Webhook refreshed — Asana→App sync is now active');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to refresh';
+      this.snackbar.show(msg);
+    } finally {
+      this.refreshing.set(false);
     }
   }
 

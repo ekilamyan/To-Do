@@ -56,6 +56,15 @@ export class AsanaService {
     await this.subscriptionService.loadProfile();
   }
 
+  async reconnect(): Promise<void> {
+    const { data, error } = await this.supabase.functions.invoke('asana-connect', {
+      body: { reconnect: true },
+    });
+    if (error) throw new Error(await this.extractError(error));
+    if (data?.error) throw new Error(data.error);
+    await this.subscriptionService.loadProfile();
+  }
+
   // ─── Task sync (App → Asana) ─────────────────────────────────────────────
   // All sync methods are fire-and-forget — they don't block the UI.
 

@@ -107,6 +107,12 @@
   font-size: 16px;
 }
 
+.connected-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .connected-detail {
   display: flex;
   align-items: center;

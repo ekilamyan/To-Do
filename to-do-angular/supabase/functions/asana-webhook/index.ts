@@ -2,7 +2,6 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 
 const ASANA_BASE = 'https://app.asana.com/api/1.0';
 
-// ─── HMAC-SHA256 verification ─────────────────────────────────────────────────
 async function verifySignature(secret: string, body: string, signature: string): Promise<boolean> {
   try {
     const key = await crypto.subtle.importKey(
@@ -22,7 +21,6 @@ async function verifySignature(secret: string, body: string, signature: string):
   }
 }
 
-// ─── Priority: Asana enum GID → app priority string ──────────────────────────
 function asanaPriorityToApp(
   customFields: { gid: string; enum_value?: { gid: string } }[],
   priorityFieldGid: string | null,
@@ -49,15 +47,15 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   );
 
-  // ─── Asana handshake (one-time on webhook registration) ──────────────────
+  // ─── Asana handshake ──────────────────────────────────────────────────────
   const hookSecret = req.headers.get('X-Hook-Secret');
   if (hookSecret) {
-    // Store the secret so we can verify future events
+    console.log('asana-webhook: handshake received for user', userId);
     await adminClient
       .from('profiles')
       .update({ asana_webhook_secret: hookSecret })
       .eq('id', userId);
-
+    console.log('asana-webhook: handshake secret stored');
     return new Response('ok', {
       status: 200,
       headers: { 'X-Hook-Secret': hookSecret, 'Content-Type': 'text/plain' },
@@ -68,7 +66,6 @@ Deno.serve(async (req) => {
   const rawBody = await req.text();
   const signature = req.headers.get('X-Hook-Signature') ?? '';
 
-  // Load user profile for secret + PAT
   const { data: profile } = await adminClient
     .from('profiles')
     .select(
@@ -78,13 +75,13 @@ Deno.serve(async (req) => {
     .single();
 
   if (!profile?.asana_webhook_secret || !profile?.asana_pat) {
-    return new Response('Not configured', { status: 200 }); // Return 200 so Asana doesn't retry
+    console.warn('asana-webhook: no secret/PAT for user', userId, '— returning 200 to suppress Asana retries');
+    return new Response('Not configured', { status: 200 });
   }
 
-  // Verify HMAC
   const valid = await verifySignature(profile.asana_webhook_secret, rawBody, signature);
   if (!valid) {
-    console.warn('asana-webhook: invalid signature for user', userId);
+    console.warn('asana-webhook: invalid HMAC signature for user', userId);
     return new Response('Invalid signature', { status: 401 });
   }
 
@@ -95,12 +92,13 @@ Deno.serve(async (req) => {
     return new Response('Invalid JSON', { status: 400 });
   }
 
+  console.log('asana-webhook: received', (payload.events ?? []).length, 'events for user', userId);
+
   const ah = {
     Authorization: `Bearer ${profile.asana_pat}`,
     'Content-Type': 'application/json',
   };
 
-  // Process events (deduplicated by task GID)
   const processedGids = new Set<string>();
 
   for (const event of payload.events ?? []) {
@@ -116,15 +114,18 @@ Deno.serve(async (req) => {
     if (processedGids.has(taskGid)) continue;
     processedGids.add(taskGid);
 
-    // Fetch latest task state from Asana
+    console.log('asana-webhook: processing task', taskGid, 'action', ev.action);
+
     const taskRes = await fetch(
       `${ASANA_BASE}/tasks/${taskGid}?opt_fields=name,notes,completed,due_on,custom_fields,modified_at,parent,memberships.section.gid`,
       { headers: ah },
     );
-    if (!taskRes.ok) continue;
+    if (!taskRes.ok) {
+      console.warn('asana-webhook: could not fetch task', taskGid, taskRes.status);
+      continue;
+    }
     const { data: asanaTask } = await taskRes.json();
 
-    // Find matching task in our DB by asana_gid
     const { data: dbTask } = await adminClient
       .from('tasks')
       .select('id, updated_at, status')
@@ -132,14 +133,19 @@ Deno.serve(async (req) => {
       .eq('user_id', userId)
       .single();
 
-    if (!dbTask) continue; // Task not in our app — ignore
+    if (!dbTask) {
+      console.log('asana-webhook: task', taskGid, 'not found in app DB — skipping');
+      continue;
+    }
 
-    // Last-write-wins: skip if our record is newer
+    // Last-write-wins
     const asanaModified = new Date(asanaTask.modified_at).getTime();
     const ourUpdated    = new Date(dbTask.updated_at).getTime();
-    if (ourUpdated > asanaModified) continue;
+    if (ourUpdated > asanaModified) {
+      console.log('asana-webhook: our record is newer — skipping task', taskGid);
+      continue;
+    }
 
-    // Determine new status
     const inDeletedSection = (asanaTask.memberships ?? []).some(
       (m: { section?: { gid: string } }) =>
         m.section?.gid === profile.asana_deleted_section_gid,
@@ -154,7 +160,6 @@ Deno.serve(async (req) => {
       newStatus = 'active';
     }
 
-    // Map priority
     const priority = asanaPriorityToApp(
       asanaTask.custom_fields ?? [],
       profile.asana_priority_field_gid,
@@ -171,6 +176,8 @@ Deno.serve(async (req) => {
       status:       newStatus,
       completed_at: asanaTask.completed ? new Date().toISOString() : null,
     };
+
+    console.log('asana-webhook: updating task', dbTask.id, '→ status:', newStatus);
 
     await adminClient
       .from('tasks')
